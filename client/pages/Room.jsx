@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchIceServers, createPeerConnection, createAnswer, addIceCandidate, onIceCandidate as setPeerIceHandler, onConnectionStateChange, onDataChannel } from '../services/peer';
 
 import ConnectionStatus from '../components/ConnectionStatus';
 import ProgressBar from '../components/Progressbar';
@@ -8,7 +7,7 @@ import TransferStats from '../components/TransferStats';
 import HashStatus from '../components/HashStatus';
 
 import { joinRoom, onOffer, onIceCandidate as onSocketIceCandidate, onPeerDisconnected, sendAnswer, sendIceCandidate } from '../services/socket';
-import { createPeerConnection, createAnswer, addIceCandidate, onIceCandidate as setPeerIceHandler, onConnectionStateChange, onDataChannel } from '../services/peer';
+import { fetchIceServers, createPeerConnection, createAnswer, addIceCandidate, onIceCandidate as setPeerIceHandler, onConnectionStateChange, onDataChannel } from '../services/peer';
 import { createReceiver } from '../services/FileTransfer';
 
 export default function Room() {
