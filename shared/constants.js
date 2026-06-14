@@ -1,32 +1,36 @@
-/** Default chunk size for file transfer (64 KB). */
-export const DEFAULT_CHUNK_SIZE = 64 * 1024;
-
-/** Maximum chunk size allowed (256 KB). */
-export const MAX_CHUNK_SIZE = 256 * 1024;
-
-/** Minimum chunk size allowed (16 KB). */
-export const MIN_CHUNK_SIZE = 16 * 1024;
-
-/** WebRTC connection timeout in milliseconds. */
-export const CONNECTION_TIMEOUT_MS = 30_000;
-
-/** Room ID length (characters). */
-export const ROOM_ID_LENGTH = 6;
-
-/** Maximum time a room stays alive without activity (1 hour). */
-export const ROOM_TTL_MS = 60 * 60 * 1000;
-
-/** Data channel label used for file transfer. */
-export const DATA_CHANNEL_LABEL = 'quickshare-file';
-
-/** Prefix for metadata messages sent over the data channel. */
-export const METADATA_PREFIX = 'QS_META:';
-
-/** Message types for data channel protocol. */
-export const DC_MESSAGE = {
-  METADATA: 'metadata',
-  CHUNK: 'chunk',
-  COMPLETE: 'complete',
-  ERROR: 'error',
-  CANCEL: 'cancel',
+/** Default WebRTC data-channel chunk size in bytes (64 KB) */
+const CHUNK_SIZE = 65536;
+ 
+/** Maximum file size the UI accepts without warning (50 MB) */
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+ 
+// ── Room ──────────────────────────────────────────────────────────────────────
+/** How long (ms) an empty room survives before cleanup (1 hour) */
+const ROOM_TTL_MS = 60 * 60 * 1000;
+ 
+/** Maximum simultaneous receivers per room (MVP = 1) */
+const MAX_RECEIVERS_PER_ROOM = 1;
+ 
+// ── WebRTC ────────────────────────────────────────────────────────────────────
+/** Public STUN servers used for ICE negotiation */
+const ICE_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+];
+ 
+// ── Message types sent through the data channel ───────────────────────────────
+/** Sent as the very first message; carries file metadata */
+const DC_MSG_META = 'meta';
+ 
+/** Sent as the final message; carries the SHA-256 hash for verification */
+const DC_MSG_DONE = 'done';
+ 
+module.exports = {
+  CHUNK_SIZE,
+  MAX_FILE_SIZE_BYTES,
+  ROOM_TTL_MS,
+  MAX_RECEIVERS_PER_ROOM,
+  ICE_SERVERS,
+  DC_MSG_META,
+  DC_MSG_DONE,
 };
