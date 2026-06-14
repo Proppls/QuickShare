@@ -1,34 +1,23 @@
-const configuration = {
-  iceServers: [
-    {
-      urls: 'stun:stun.l.google.com:19302',
-    },
-    {
-      urls: 'stun:stun1.l.google.com:19302',
-    },
-    {
-      urls: 'turn:openrelay.metered.ca:80',
-      username: 'openrelayproject',
-      credential: 'openrelayproject',
-    },
-    {
-      urls: 'turn:openrelay.metered.ca:443',
-      username: 'openrelayproject',
-      credential: 'openrelayproject',
-    },
-    {
-      urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-      username: 'openrelayproject',
-      credential: 'openrelayproject',
-    },
-  ],
+const METERED_API_KEY = '71b0f0927625d50cd5dcc2addab7b97d908a';
+
+let iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
+
+export const fetchIceServers = async () => {
+  try {
+    const response = await fetch(
+      `https://lukieee.metered.live/api/v1/turn/credentials?apiKey=${METERED_API_KEY}`
+    );
+    iceServers = await response.json();
+  } catch (err) {
+    console.warn('Failed to fetch TURN credentials, using STUN only:', err);
+  }
 };
 
 let peerConnection = null;
 let dataChannel = null;
 
 export const createPeerConnection = () => {
-  peerConnection = new RTCPeerConnection(configuration);
+  peerConnection = new RTCPeerConnection({ iceServers });
   return peerConnection;
 };
 
@@ -54,67 +43,10 @@ export const getDataChannel = () => {
 
 export const createOffer = async () => {
   const offer = await peerConnection.createOffer();
-
   await peerConnection.setLocalDescription(offer);
-
   return offer;
 };
 
 export const createAnswer = async (offer) => {
   await peerConnection.setRemoteDescription(
-    new RTCSessionDescription(offer)
-  );
-
-  const answer = await peerConnection.createAnswer();
-
-  await peerConnection.setLocalDescription(answer);
-
-  return answer;
-};
-
-export const setRemoteAnswer = async (answer) => {
-  await peerConnection.setRemoteDescription(
-    new RTCSessionDescription(answer)
-  );
-};
-
-export const addIceCandidate = async (candidate) => {
-  if (!candidate) return;
-
-  await peerConnection.addIceCandidate(
-    new RTCIceCandidate(candidate)
-  );
-};
-
-export const onIceCandidate = (callback) => {
-  peerConnection.onicecandidate = (event) => {
-    if (event.candidate) {
-      callback(event.candidate);
-    }
-  };
-};
-
-export const onConnectionStateChange = (callback) => {
-  peerConnection.onconnectionstatechange = () => {
-    callback(peerConnection.connectionState);
-  };
-};
-
-export const onDataChannel = (callback) => {
-  peerConnection.ondatachannel = (event) => {
-    dataChannel = event.channel;
-    callback(event.channel);
-  };
-};
-
-export const closePeerConnection = () => {
-  if (dataChannel) {
-    dataChannel.close();
-    dataChannel = null;
-  }
-
-  if (peerConnection) {
-    peerConnection.close();
-    peerConnection = null;
-  }
-};
+    new RTCSessionDescription(off
