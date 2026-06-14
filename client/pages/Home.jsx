@@ -7,11 +7,9 @@ import ProgressBar from '../components/Progressbar';
 import TransferStats from '../components/TransferStats';
 
 import { createRoom, onPeerJoined, onIceCandidate, onAnswer, sendOffer, sendIceCandidate } from '../services/socket';
-import { createPeerConnection, createDataChannel, onIceCandidate as setPeerIceHandler, onConnectionStateChange } from '../services/peer';
+import { fetchIceServers, createPeerConnection, createDataChannel, onIceCandidate as setPeerIceHandler, onConnectionStateChange } from '../services/peer';
 import { sendFile } from '../services/FileTransfer';
 import { generateRoomLink } from '../utils/generateRoomLink';
-
-import { fetchIceServers, createPeerConnection, createDataChannel, onIceCandidate as setPeerIceHandler, onConnectionStateChange } from '../services/peer';
 
 
 export default function Home() {
