@@ -47,16 +47,7 @@ export default function FileDropzone({ file, onFileSelect }) {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onClick={() => inputRef.current?.click()}
-        className="
-          border-2 border-dashed border-slate-300
-          rounded-xl
-          p-10
-          text-center
-          cursor-pointer
-          transition
-          hover:border-blue-500
-          hover:bg-slate-50
-        "
+        className="border-2 border-dashed border-slate-300 rounded-xl p-10 text-center cursor-pointer transition hover:border-blue-500 hover:bg-slate-50"
       >
         <input
           ref={inputRef}
