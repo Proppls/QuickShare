@@ -32,6 +32,7 @@ export default function Home() {
   };
 
   const handleCreateRoom = async () => {
+    await fetchIceServers()
     if (!file) {
       setError('Please select a file first.');
       return;
@@ -42,7 +43,6 @@ export default function Home() {
       const data = await createRoom();
       const id = data.roomId;
 
-    await fetchIceServers();
       setRoomId(id);
       roomIdRef.current = id;
       setInviteLink(generateRoomLink(id));
