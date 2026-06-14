@@ -1,5 +1,5 @@
 import { io } from 'socket.io-client';
-import { SOCKET_EVENTS } from '../../../shared/events';
+import { SOCKET_EVENTS } from '../../shared/events';
 
 const SERVER_URL =
   import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
