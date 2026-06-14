@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-import Home from './pages/Home';
-import Room from './pages/Room';
+import Home from './Pages/Home';
+import Room from './Pages/Room';
 
 export default function App() {
   return (
