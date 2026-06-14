@@ -1,0 +1,747 @@
+# File Transfer Flow
+
+## Overview
+
+After a WebRTC connection has been established between the sender and receiver, QuickShare transfers files directly through a WebRTC Data Channel.
+
+No file data is routed through the backend server.
+
+The transfer process consists of:
+
+1. File Selection
+2. Metadata Generation
+3. SHA-256 Hash Generation
+4. File Chunking
+5. Chunk Transmission
+6. Progress Tracking
+7. File Reconstruction
+8. Hash Verification
+9. File Download
+
+---
+
+# File Transfer Architecture
+
+```text
+Sender Browser
+      │
+      │ WebRTC Data Channel
+      ▼
+Receiver Browser
+```
+
+The signaling server is no longer involved.
+
+---
+
+# Transfer Lifecycle
+
+```text
+Select File
+      │
+      ▼
+Generate Metadata
+      │
+      ▼
+Generate SHA-256 Hash
+      │
+      ▼
+Chunk File
+      │
+      ▼
+Transfer Chunks
+      │
+      ▼
+Reconstruct File
+      │
+      ▼
+Verify Hash
+      │
+      ▼
+Download File
+```
+
+---
+
+# Step 1: File Selection
+
+The sender chooses a file using:
+
+* File picker
+* Drag and drop interface
+
+Supported file types:
+
+```text
+Any file type
+```
+
+Examples:
+
+```text
+PDF
+ZIP
+MP4
+PNG
+TXT
+CSV
+DOCX
+```
+
+The browser provides a File object.
+
+Example:
+
+```javascript
+{
+  name: "project-report.pdf",
+  size: 5242880,
+  type: "application/pdf"
+}
+```
+
+---
+
+# Step 2: File Metadata Creation
+
+Before transferring the actual file, metadata is generated.
+
+Metadata allows the receiver to prepare storage structures and display information.
+
+Example:
+
+```javascript
+{
+  name: "project-report.pdf",
+  size: 5242880,
+  type: "application/pdf",
+  lastModified: 1715000000000
+}
+```
+
+---
+
+# Metadata Transfer
+
+Metadata is sent first through the Data Channel.
+
+Example message:
+
+```javascript
+{
+  type: "file-metadata",
+  payload: {
+    name: "project-report.pdf",
+    size: 5242880,
+    type: "application/pdf"
+  }
+}
+```
+
+The receiver stores this information before chunk transfer begins.
+
+---
+
+# Step 3: SHA-256 Hash Generation
+
+To verify integrity, the sender computes a SHA-256 hash of the file.
+
+## Sender Flow
+
+```text
+File
+ │
+ ▼
+SHA-256
+ │
+ ▼
+Hash Value
+```
+
+Implementation uses:
+
+```javascript
+crypto.subtle.digest(
+  "SHA-256",
+  fileBuffer
+);
+```
+
+Example hash:
+
+```text
+8f434346648f6b96df89dd6c9c4f8b7c...
+```
+
+---
+
+# Hash Transmission
+
+The generated hash is sent before file transfer begins.
+
+Example:
+
+```javascript
+{
+  type: "hash",
+  payload: {
+    algorithm: "SHA-256",
+    value: "8f434346648f6..."
+  }
+}
+```
+
+The receiver stores this value for later verification.
+
+---
+
+# Step 4: File Chunking
+
+Large files cannot be sent efficiently as a single message.
+
+The file is divided into smaller chunks.
+
+Default chunk size:
+
+```text
+64 KB
+```
+
+---
+
+## Chunking Process
+
+```text
+Original File
+      │
+      ▼
+ArrayBuffer
+      │
+      ▼
+64 KB Chunks
+```
+
+Example:
+
+```text
+File Size: 5 MB
+
+Chunk Size: 64 KB
+
+Total Chunks:
+≈ 80
+```
+
+---
+
+## Chunk Structure
+
+Each chunk is a binary ArrayBuffer.
+
+Example:
+
+```javascript
+ArrayBuffer(65536)
+```
+
+Chunks are transmitted sequentially.
+
+---
+
+# Step 5: Data Channel Transmission
+
+The sender sends chunks through the WebRTC Data Channel.
+
+Example:
+
+```javascript
+dataChannel.send(chunk);
+```
+
+---
+
+# Sender Transfer Flow
+
+```text
+Chunk 1
+Chunk 2
+Chunk 3
+Chunk 4
+...
+Chunk N
+```
+
+Each chunk is transmitted in order.
+
+---
+
+# Ordered Delivery
+
+The Data Channel is configured as:
+
+```javascript
+{
+  ordered: true
+}
+```
+
+Benefits:
+
+* Chunks arrive in sequence
+* Simplified reconstruction
+* Reduced error handling
+
+---
+
+# Flow Control
+
+The sender monitors:
+
+```javascript
+dataChannel.bufferedAmount
+```
+
+If the buffer becomes large:
+
+```text
+Pause Sending
+```
+
+When buffer decreases:
+
+```text
+Resume Sending
+```
+
+Benefits:
+
+* Prevents memory spikes
+* Prevents browser freezes
+* Improves reliability
+
+---
+
+# Step 6: Progress Tracking
+
+Transfer progress is updated continuously.
+
+Formula:
+
+```text
+Transferred Bytes
+────────────────── × 100
+Total File Size
+```
+
+Example:
+
+```text
+2.5 MB / 5 MB = 50%
+```
+
+Displayed as:
+
+```text
+50%
+```
+
+---
+
+# Transfer Speed Calculation
+
+Transfer speed is calculated using:
+
+```text
+Bytes Sent
+──────────────
+Elapsed Time
+```
+
+Example:
+
+```text
+2.3 MB/s
+```
+
+---
+
+# Remaining Time Calculation
+
+Formula:
+
+```text
+Remaining Bytes
+───────────────
+Current Speed
+```
+
+Example:
+
+```text
+12 seconds remaining
+```
+
+---
+
+# Example Statistics
+
+```text
+Progress: 45%
+
+Transferred:
+450 MB / 1 GB
+
+Speed:
+2.3 MB/s
+
+Remaining:
+4 min 12 sec
+```
+
+---
+
+# Step 7: File Reconstruction
+
+The receiver collects incoming chunks.
+
+Example:
+
+```javascript
+receivedChunks.push(chunk);
+```
+
+---
+
+## Reconstruction Flow
+
+```text
+Received Chunks
+       │
+       ▼
+Chunk Array
+       │
+       ▼
+Blob Creation
+```
+
+Example:
+
+```javascript
+const fileBlob =
+  new Blob(receivedChunks, {
+    type: fileType
+  });
+```
+
+---
+
+# Blob Example
+
+```javascript
+Blob {
+  size: 5242880,
+  type: "application/pdf"
+}
+```
+
+The original file is now reconstructed.
+
+---
+
+# Step 8: Transfer Completion
+
+After the final chunk is sent:
+
+```javascript
+{
+  type: "transfer-complete"
+}
+```
+
+is transmitted.
+
+---
+
+## Receiver Actions
+
+The receiver:
+
+* Stops accepting chunks
+* Reconstructs file
+* Begins verification
+
+---
+
+# Step 9: Integrity Verification
+
+The receiver computes a SHA-256 hash of the reconstructed file.
+
+---
+
+## Verification Flow
+
+```text
+Received File
+      │
+      ▼
+SHA-256
+      │
+      ▼
+Computed Hash
+      │
+      ▼
+Compare
+      │
+      ▼
+Verification Result
+```
+
+---
+
+## Comparison
+
+Sender Hash:
+
+```text
+8f434346648f6...
+```
+
+Receiver Hash:
+
+```text
+8f434346648f6...
+```
+
+Result:
+
+```text
+✓ File Verified
+```
+
+---
+
+## Failure Example
+
+Sender Hash:
+
+```text
+8f434346648f6...
+```
+
+Receiver Hash:
+
+```text
+2f8343a11234bc...
+```
+
+Result:
+
+```text
+✗ Verification Failed
+```
+
+---
+
+# Step 10: File Download
+
+If verification succeeds:
+
+```javascript
+const url =
+  URL.createObjectURL(fileBlob);
+```
+
+The receiver is presented with a download button.
+
+---
+
+## Download Flow
+
+```text
+Verified File
+      │
+      ▼
+Blob URL
+      │
+      ▼
+Download
+```
+
+The downloaded file is identical to the sender's original file.
+
+---
+
+# Message Types
+
+The Data Channel protocol uses four message types.
+
+---
+
+## File Metadata
+
+```javascript
+{
+  type: "file-metadata",
+  payload: {}
+}
+```
+
+Purpose:
+
+```text
+File information exchange
+```
+
+---
+
+## Hash
+
+```javascript
+{
+  type: "hash",
+  payload: {}
+}
+```
+
+Purpose:
+
+```text
+Integrity verification
+```
+
+---
+
+## File Chunk
+
+```javascript
+ArrayBuffer
+```
+
+Purpose:
+
+```text
+Actual file data
+```
+
+---
+
+## Transfer Complete
+
+```javascript
+{
+  type: "transfer-complete"
+}
+```
+
+Purpose:
+
+```text
+Signals end of transfer
+```
+
+---
+
+# Error Handling
+
+## Connection Lost
+
+If peer disconnects:
+
+```text
+Transfer Failed
+```
+
+---
+
+## Hash Mismatch
+
+If hashes differ:
+
+```text
+Verification Failed
+```
+
+---
+
+## Invalid Metadata
+
+If metadata is corrupted:
+
+```text
+Transfer Aborted
+```
+
+---
+
+## Browser Memory Issues
+
+Large transfers are protected by:
+
+* Chunking
+* Flow control
+* Buffered amount monitoring
+
+---
+
+# Security Considerations
+
+QuickShare prioritizes privacy and integrity.
+
+## No Server Storage
+
+Files are never uploaded to the backend.
+
+---
+
+## Direct Communication
+
+Transfers occur directly between browsers.
+
+---
+
+## SHA-256 Verification
+
+Detects corruption during transfer.
+
+---
+
+## Room Isolation
+
+Only connected peers can exchange data.
+
+---
+
+# Complete Transfer Sequence
+
+```text
+Sender                            Receiver
+  │                                  │
+  ├── Metadata ─────────────────────►│
+  │                                  │
+  ├── SHA-256 Hash ─────────────────►│
+  │                                  │
+  ├── Chunk 1 ──────────────────────►│
+  ├── Chunk 2 ──────────────────────►│
+  ├── Chunk 3 ──────────────────────►│
+  ├── Chunk 4 ──────────────────────►│
+  │                                  │
+  ├── Chunk N ──────────────────────►│
+  │                                  │
+  ├── Transfer Complete ────────────►│
+  │                                  │
+  │                          Reconstruct File
+  │                                  │
+  │                          Compute SHA-256
+  │                                  │
+  │                          Compare Hashes
+  │                                  │
+  │                          ✓ Verified
+  │                                  │
+  │                          Download File
+```
+
+---
+
+# Summary
+
+QuickShare transfers files directly through WebRTC Data Channels without routing data through a central server. Files are divided into chunks, transmitted efficiently between peers, reconstructed on the receiving side, and verified using SHA-256 hashing to ensure data integrity. This architecture provides secure, efficient, and scalable browser-to-browser file sharing.
