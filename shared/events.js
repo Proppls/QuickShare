@@ -1,26 +1,24 @@
-const EVENTS = {
-  // ── Room lifecycle ──────────────────────────────────────────────────────────
-  /** Sender → Server: create a new room */
+/**
+ * Socket.io event names shared between client and server.
+ * The server only relays signaling messages — never file data.
+ */
+
+export const SOCKET_EVENTS = {
+  // Room management
   CREATE_ROOM: 'create-room',
- 
-  /** Receiver → Server: join an existing room by ID */
+  ROOM_CREATED: 'room-created',
+
   JOIN_ROOM: 'join-room',
- 
-  /** Server → Sender: a peer successfully joined the room */
+  ROOM_JOINED: 'room-joined',
+
+  ROOM_ERROR: 'room-error',
+
+  // Peer lifecycle
   PEER_JOINED: 'peer-joined',
- 
-  /** Server → remaining peer: the other peer disconnected */
   PEER_DISCONNECTED: 'peer-disconnected',
- 
-  // ── WebRTC signaling ────────────────────────────────────────────────────────
-  /** Sender → Server → Receiver: SDP offer */
+
+  // WebRTC signaling
   OFFER: 'offer',
- 
-  /** Receiver → Server → Sender: SDP answer */
   ANSWER: 'answer',
- 
-  /** Both directions: ICE candidate trickle */
   ICE_CANDIDATE: 'ice-candidate',
 };
- 
-module.exports = { EVENTS };
