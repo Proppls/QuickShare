@@ -17,7 +17,17 @@ let peerConnection = null;
 let dataChannel = null;
 
 export const createPeerConnection = () => {
+  console.log('Creating peer connection with ICE servers:', JSON.stringify(iceServers));
   peerConnection = new RTCPeerConnection({ iceServers });
+  
+  peerConnection.oniceconnectionstatechange = () => {
+    console.log('ICE connection state:', peerConnection.iceConnectionState);
+  };
+  
+  peerConnection.onicegatheringstatechange = () => {
+    console.log('ICE gathering state:', peerConnection.iceGatheringState);
+  };
+
   return peerConnection;
 };
 
