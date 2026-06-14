@@ -1,36 +1,74 @@
-/** Default WebRTC data-channel chunk size in bytes (64 KB) */
-const CHUNK_SIZE = 65536;
- 
-/** Maximum file size the UI accepts without warning (50 MB) */
-const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
- 
-// ── Room ──────────────────────────────────────────────────────────────────────
-/** How long (ms) an empty room survives before cleanup (1 hour) */
-const ROOM_TTL_MS = 60 * 60 * 1000;
- 
-/** Maximum simultaneous receivers per room (MVP = 1) */
-const MAX_RECEIVERS_PER_ROOM = 1;
- 
-// ── WebRTC ────────────────────────────────────────────────────────────────────
-/** Public STUN servers used for ICE negotiation */
-const ICE_SERVERS = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-];
- 
-// ── Message types sent through the data channel ───────────────────────────────
-/** Sent as the very first message; carries file metadata */
-const DC_MSG_META = 'meta';
- 
-/** Sent as the final message; carries the SHA-256 hash for verification */
-const DC_MSG_DONE = 'done';
- 
-module.exports = {
-  CHUNK_SIZE,
-  MAX_FILE_SIZE_BYTES,
-  ROOM_TTL_MS,
-  MAX_RECEIVERS_PER_ROOM,
-  ICE_SERVERS,
-  DC_MSG_META,
-  DC_MSG_DONE,
+/**
+ * Global application constants shared by client and server.
+ */
+
+export const APP_CONFIG = {
+  // Room configuration
+  ROOM_ID_LENGTH: 6,
+
+  // File transfer configuration
+  DEFAULT_CHUNK_SIZE: 64 * 1024, // 64 KB
+  MAX_FILE_SIZE: 10 * 1024 * 1024 * 1024, // 10 GB
+
+  // Progress update interval (ms)
+  PROGRESS_UPDATE_INTERVAL: 500,
+
+  // WebRTC configuration
+  ICE_SERVERS: [
+    {
+      urls: 'stun:stun.l.google.com:19302',
+    },
+    {
+      urls: 'stun:stun1.l.google.com:19302',
+    },
+  ],
+
+  // Data channel configuration
+  DATA_CHANNEL_LABEL: 'quickshare-data',
+  DATA_CHANNEL_OPTIONS: {
+    ordered: true,
+  },
+};
+
+export const TRANSFER_STATUS = {
+  IDLE: 'idle',
+  WAITING: 'waiting',
+  CONNECTING: 'connecting',
+  CONNECTED: 'connected',
+  TRANSFERRING: 'transferring',
+  COMPLETED: 'completed',
+  VERIFIED: 'verified',
+  FAILED: 'failed',
+};
+
+export const PEER_ROLE = {
+  SENDER: 'sender',
+  RECEIVER: 'receiver',
+};
+
+export const HASH_ALGORITHM = 'SHA-256';
+
+export const FILE_MESSAGE_TYPES = {
+  FILE_METADATA: 'file-metadata',
+  FILE_CHUNK: 'file-chunk',
+  TRANSFER_COMPLETE: 'transfer-complete',
+  HASH: 'hash',
+};
+
+export const CONNECTION_STATE = {
+  NEW: 'new',
+  CONNECTING: 'connecting',
+  CONNECTED: 'connected',
+  DISCONNECTED: 'disconnected',
+  FAILED: 'failed',
+  CLOSED: 'closed',
+};
+
+export const ERROR_MESSAGES = {
+  ROOM_NOT_FOUND: 'Room not found.',
+  ROOM_FULL: 'Room is already full.',
+  CONNECTION_FAILED: 'Peer connection failed.',
+  TRANSFER_FAILED: 'File transfer failed.',
+  HASH_MISMATCH: 'File verification failed.',
+  INVALID_FILE: 'Invalid file selected.',
 };
