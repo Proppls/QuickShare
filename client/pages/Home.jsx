@@ -11,6 +11,9 @@ import { createPeerConnection, createDataChannel, onIceCandidate as setPeerIceHa
 import { sendFile } from '../services/FileTransfer';
 import { generateRoomLink } from '../utils/generateRoomLink';
 
+import { fetchIceServers, createPeerConnection, createDataChannel, onIceCandidate as setPeerIceHandler, onConnectionStateChange } from '../services/peer';
+await fetchIceServers();
+
 export default function Home() {
   const [file, setFile] = useState(null);
   const [roomId, setRoomId] = useState(null);
