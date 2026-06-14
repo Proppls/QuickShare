@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { fetchIceServers, createPeerConnection, createAnswer, addIceCandidate, onIceCandidate as setPeerIceHandler, onConnectionStateChange, onDataChannel } from '../services/peer';
 
 import ConnectionStatus from '../components/ConnectionStatus';
 import ProgressBar from '../components/Progressbar';
@@ -26,8 +27,9 @@ export default function Room() {
   const [error, setError] = useState('');
 
   const roomIdRef = useRef(roomId);
-
+  
   useEffect(() => {
+    await fetchIceServers();
     joinRoom(roomId);
 
     onOffer(async (offer) => {
